@@ -52,10 +52,10 @@ class BookingForm(forms.ModelForm):
 class RoomFilterForm(forms.Form):
     min_price = forms.DecimalField(label='Минимальная цена',
                                    required=False,
-                                   widget=forms.NumberInput(attrs={'type': 'range', 'step': '50', 'min': '1000', 'max': '10000', 'value': '1000'}))
+                                   widget=forms.NumberInput(attrs={'type': 'range', 'step': '100', 'min': '1000', 'max': '10000', 'value': '1000'}))
     max_price = forms.DecimalField(label='Максимальная цена',
                                    required=False,
-                                   widget=forms.NumberInput(attrs={'type': 'range', 'step': '50', 'min': '1000', 'max': '10000', 'value': '10000'}))
+                                   widget=forms.NumberInput(attrs={'type': 'range', 'step': '100', 'min': '1000', 'max': '10000', 'value': '10000'}))
     capacity = forms.IntegerField(label='Количество мест',
                                   required=False)
     check_in = forms.DateField(label='Дата заезда',

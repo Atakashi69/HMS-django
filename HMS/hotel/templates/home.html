@@ -3,13 +3,16 @@
 {% block content %}
     <div>
         <form action="" method="get">
+            <h3>Фильтрация</h3>
             {{ filter_form.min_price.label_tag }}
             <span id="min-price-value">{{ filter_form.min_price.value }}</span>
+            <br>
             {{ filter_form.min_price }}
             <br>
 
             {{ filter_form.max_price.label_tag }}
             <span id="max-price-value">{{ filter_form.max_price.value }}</span>
+            <br>
             {{ filter_form.max_price }}
             <br>
 
@@ -28,11 +31,13 @@
             <button type="submit">Фильтровать</button>
         </form>
         {% for room in rooms %}
-        <p>
-            Комната на {{ room.capacity }} человек(а), по цене {{ room.price }} за ночь
-        </p>
-        <a href="book/{{ room.pk }}">Забронировать</a>
-        <hr>
+        <div class="room-container">
+            <p>
+                Комната на {{ room.capacity }} человек(а), по цене {{ room.price }} за ночь
+            </p>
+            <a href="book/{{ room.pk }}">Забронировать</a>
+            <hr>
+        </div>
         {% empty %}
             <p>Нет комнат, удовлетворяющих условиям поиска</p>
         {% endfor %}

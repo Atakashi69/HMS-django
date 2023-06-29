@@ -2,7 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     {% include 'includes/messages.html' %}
@@ -10,7 +11,7 @@
         <div>
             <ul>
                 {% if user.is_authenticated %}
-                <p>Здравствуйте, {{ user.username }}</p>
+                <p class="welcome-user">Здравствуйте, {{ user.username }}</p>
                 <li>
                     <a href="{% url 'home' %}">На главную</a>
                 </li>
@@ -25,7 +26,7 @@
                     <a href="{% url 'home' %}">На главную</a>
                 </li>
                 <li>
-                    <a href="{% url 'login' %}">Логин</a>
+                    <a href="{% url 'login' %}">Вход</a>
                 </li>
                 <li>
                     <a href="{% url 'signup' %}">Регистрация</a>

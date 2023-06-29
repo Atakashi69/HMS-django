@@ -1,12 +1,12 @@
+{% extends 'base.html' %}
 {% block content %}
-<a href="{% url 'home' %}">На главную</a>
 <div>
 	<h1>Вход</h1>
 	<form method="POST">
 		{% csrf_token %}
 		{{ login_form.as_p }}
 		<button type="submit">Войти</button>
+		<p>Ещё нет аккаунта? <a href="/signup">Регистрация</a></p>
 	</form>
-	<p>Ещё нет аккаунта? <a href="/signup">Регистрация</a></p>
 </div>
 {% endblock %}
