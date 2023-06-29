@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <div>
+        <form action="" method="get">
+            {{ filter_form.min_price.label_tag }}
+            <span id="min-price-value">{{ filter_form.min_price.value }}</span>
+            {{ filter_form.min_price }}
+            <br>
+
+            {{ filter_form.max_price.label_tag }}
+            <span id="max-price-value">{{ filter_form.max_price.value }}</span>
+            {{ filter_form.max_price }}
+            <br>
+
+            {{ filter_form.capacity.label_tag }}
+            <input name="capacity" type="number" min="1" max="4" value="{{ filter_form.capacity.value }}">
+            <br>
+
+            {{ filter_form.check_in.label_tag }}
+            {{ filter_form.check_in }}
+            <br>
+
+            {{ filter_form.check_out.label_tag }}
+            {{ filter_form.check_out }}
+            <br>
+
+            <button type="submit">Фильтровать</button>
+        </form>
+        {% for room in rooms %}
+        <p>
+            Комната на {{ room.capacity }} человек(а), по цене {{ room.price }} за ночь
+        </p>
+        <a href="book/{{ room.pk }}">Забронировать</a>
+        <hr>
+        {% empty %}
+            <p>Нет комнат, удовлетворяющих условиям поиска</p>
+        {% endfor %}
+    </div>
+    <script src="{% static 'js/script.js' %}"></script>
+{% endblock %}

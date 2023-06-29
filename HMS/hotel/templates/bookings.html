@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div>
+        {% for booking in bookings %}
+        <p>
+            Вами забронирована комната на {{ booking.room.capacity }} человек(а), по цене {{ booking.room.price }} за ночь
+        </p>
+        <p>
+            Время проживания: с {{ booking.check_in }} по {{ booking.check_out }}
+        </p>
+        <a href="{% url 'booking_cancel' booking.id %}">Отменить бронь</a>
+        <hr>
+        {% endfor %}
+    </div>
+{% endblock %}

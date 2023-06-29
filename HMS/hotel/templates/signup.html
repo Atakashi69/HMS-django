@@ -1,0 +1,12 @@
+{% block content %}
+<a href="{% url 'home' %}">На главную</a>
+<div>
+	<h1>Регистрация</h1>
+	<form method="POST">
+		{% csrf_token %}
+		{{ signup_form.as_p }}
+		<button type="submit">Зарегистрироваться</button>
+	</form>
+	<p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+</div>
+{% endblock %}
