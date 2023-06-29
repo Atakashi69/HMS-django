@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -125,7 +125,7 @@ def logout_request(request):
     messages.info(request, 'Вы успешно вышли!')
     return redirect('home')
 
-class RoomListCreateView(generics.ListCreateAPIView):
+class RoomListView(generics.ListCreateAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
 
