@@ -1,140 +1,80 @@
-from rest_framework import generics, viewsets
-from django.contrib import messages
-from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import SignUpForm, RoomFilterForm, BookingForm
+from django.contrib.auth import authenticate
+from rest_framework import generics, status
+from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+
 from .models import Room, Booking
-from .booking_functions.availability import check_availability
-from .serializers import RoomSerializer
+from .permissions import AdminOrReadOnly, OwnerOrAdmin
+from .serializers import RoomSerializer, BookingSerializer
+from .filters import RoomFilter, BookingFilter
 
 
-def home(request):
-    template_name = 'home.html'
-    form = RoomFilterForm(request.GET or None)
-    rooms = Room.objects.all()
+class RegistrationView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data = request.data
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
 
-    if form.is_valid():
-        min_price = form.cleaned_data['min_price']
-        max_price = form.cleaned_data['max_price']
-        capacity = form.cleaned_data['capacity']
-        check_in = form.cleaned_data['check_in']
-        check_out = form.cleaned_data['check_out']
+        if not username or not password:
+            return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if min_price:
-            rooms = rooms.filter(price__gte=min_price)
-        if max_price:
-            rooms = rooms.filter(price__lte=max_price)
-        if capacity:
-            rooms = rooms.filter(capacity=capacity)
-        if check_in and check_out:
-            for room in rooms:
-                if not check_availability(room, check_in, check_out):
-                    rooms = rooms.exclude(pk=room.pk)
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Username is already taken.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    return render(request, template_name, {'filter_form':form, 'rooms':rooms})
+        user = User.objects.create_user(username=username, password=password, email=email)
 
-def bookings_request(request):
-    template_name = 'bookings.html'
-    if not request.user.is_authenticated:
-        messages.error(request, 'Вы не авторизованы')
-        return redirect('login')
+        token, created = Token.objects.get_or_create(user=user)
 
-    bookings = Booking.objects.filter(user=request.user)
-    return render(request, template_name, {'bookings':bookings})
+        return Response({'token': token.key}, status=status.HTTP_201_CREATED)
 
-def book_request(request, room_pk):
-    template_name = 'book.html'
-    if not request.user.is_authenticated:
-        messages.error(request, 'Вы не авторизованы')
-        return redirect('login')
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        data =request.data
+        username = data.get('username')
+        password = data.get('password')
 
-    room = get_object_or_404(Room, pk=room_pk)
+        user = authenticate(username=username, password=password)
 
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            booking = form.save(commit=False)
-            booking.user = request.user
-            booking.room = room
-            booking.check_in = form.cleaned_data['check_in']
-            booking.check_out = form.cleaned_data['check_out']
+        if not user:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            if not check_availability(room, form.cleaned_data['check_in'], form.cleaned_data['check_out']):
-                messages.error(request, 'Комната уже забронирована на данный промежуток времени!')
-                return render(request, template_name, {'booking_form':form})
+        token, created = Token.objects.get_or_create(user=user)
 
-            booking.save()
-            messages.success(request, 'Вы успешно забронировали комнату!')
-            return redirect('bookings')
-        else:
-            messages.error(request, 'Одно из полей заполнено неверно!')
-    else:
-        form = BookingForm()
-    return render(request, template_name, {'booking_form':form, 'room': room})
+        return Response({'token': token.key}, status=status.HTTP_200_OK)
 
-
-def booking_cancel_request(request, booking_pk):
-    booking = get_object_or_404(Booking, id=booking_pk)
-    booking.delete()
-    messages.success(request, 'Бронь успешно отменена')
-    return redirect('bookings')
-
-
-def signup_request(request):
-    template_name = 'signup.html'
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Регистрация успешна!')
-            return redirect('home')
-        else:
-            messages.error(request, 'Одно из полей заполнено неверно!')
-    else:
-        form = SignUpForm()
-    return render(request, template_name, {'signup_form':form})
-
-def login_request(request):
-    template_name = 'login.html'
-    if request.user.is_authenticated:
-        messages.info(request, 'Вы уже вошли')
-        return redirect('home')
-
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.info(request, f'Добро пожаловать, {username}')
-                return redirect('home')
-            else:
-                messages.error(request, 'Неверный никнейм или пароль!')
-        else:
-            messages.error(request, 'Неверный никнейм или пароль!')
-    else:
-        form = AuthenticationForm()
-    return render(request, template_name, {'login_form':form})
-
-def logout_request(request):
-    logout(request)
-    messages.info(request, 'Вы успешно вышли!')
-    return redirect('home')
 
 class RoomListView(generics.ListCreateAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+    permission_classes = [AdminOrReadOnly]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RoomFilter
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        number = self.request.query_params.get('number', None)
-        capacity = self.request.query_params.get('capacity', None)
-        if number is not None:
-            queryset = queryset.filter(number=number)
-        if capacity is not None:
-            queryset = queryset.filter(capacity=capacity)
-        return queryset
+class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    permission_classes = [AdminOrReadOnly]
+
+
+class BookingListView(generics.ListCreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [OwnerOrAdmin]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = BookingFilter
+
+    # Автоматически ставит айди текущего пользователя при создании записи
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+    permission_classes = [OwnerOrAdmin]
