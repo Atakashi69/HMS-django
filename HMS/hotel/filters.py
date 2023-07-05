@@ -18,7 +18,7 @@ class RoomAvailabilityFilter(django_filters.BaseInFilter):
         return available_rooms
 
 class RoomFilter(django_filters.FilterSet):
-    availability = django_filters.CharFilter(method='filter_availability')
+    availability = django_filters.CharFilter(method='filter_availability', label='avilability')
     class Meta:
         model = Room
         fields = {
